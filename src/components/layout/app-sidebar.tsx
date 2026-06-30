@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   Activity,
   BookOpen,
@@ -10,7 +11,9 @@ import {
   Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { BRAND, NAV_SECTIONS } from "@/lib/dashboard/content";
+import { BrandLogo } from "@/components/brand/brand-logo";
+import { LCLONE_BRAND } from "@/lib/brand/tokens";
+import { NAV_SECTIONS } from "@/lib/dashboard/content";
 
 const ICONS = {
   home: Home,
@@ -25,23 +28,26 @@ const ICONS = {
 
 export function AppSidebar({ pathname }: { pathname: string }) {
   return (
-    <aside className="flex w-64 shrink-0 flex-col border-r bg-sidebar text-sidebar-foreground">
-      <div className="border-b px-5 py-5">
-        <Link href="/dashboard" className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
-            L
-          </div>
-          <div>
-            <p className="text-base font-bold tracking-tight">{BRAND.name}</p>
-            <p className="text-[11px] leading-tight text-muted-foreground">{BRAND.tagline}</p>
-          </div>
-        </Link>
+    <aside className="relative flex w-64 shrink-0 flex-col border-r border-sidebar-border bg-sidebar text-sidebar-foreground">
+      <div className="absolute inset-0 opacity-30">
+        <Image
+          src={LCLONE_BRAND.images.heroReplication}
+          alt=""
+          fill
+          className="object-cover object-left-top"
+          sizes="256px"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-sidebar via-sidebar/95 to-sidebar" />
       </div>
 
-      <nav className="flex-1 space-y-6 overflow-y-auto p-4">
+      <div className="relative border-b border-sidebar-border px-4 py-5">
+        <BrandLogo href="/dashboard" size="md" />
+      </div>
+
+      <nav className="relative flex-1 space-y-6 overflow-y-auto p-4">
         {NAV_SECTIONS.map((section) => (
           <div key={section.label}>
-            <p className="mb-2 px-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">
               {section.label}
             </p>
             <div className="flex flex-col gap-0.5">
@@ -57,9 +63,9 @@ export function AppSidebar({ pathname }: { pathname: string }) {
                     key={href}
                     href={href}
                     className={cn(
-                      "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                      "flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                       active
-                        ? "bg-indigo-600 text-white shadow-sm"
+                        ? "bg-gradient-to-r from-[#4A7DB8] to-[#3D6B9A] text-white shadow-md shadow-[#4A7DB8]/20"
                         : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
                     )}
                   >
@@ -73,13 +79,13 @@ export function AppSidebar({ pathname }: { pathname: string }) {
         ))}
       </nav>
 
-      <div className="border-t p-4">
+      <div className="relative border-t border-sidebar-border p-4">
         <Link
           href="/dashboard/guide"
-          className="block rounded-lg bg-indigo-50 p-3 text-xs leading-relaxed text-indigo-900 transition hover:bg-indigo-100"
+          className="block overflow-hidden rounded-xl border border-[#4A7DB8]/30 bg-[#1E2836]/80 p-3 transition hover:border-[#4A7DB8]/60"
         >
-          <p className="font-semibold">처음이신가요?</p>
-          <p className="mt-1 text-indigo-700/80">5단계 사용 가이드 보기 →</p>
+          <p className="text-xs font-semibold text-[#A8D4FF]">처음이신가요?</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">5단계 사용 가이드 →</p>
         </Link>
       </div>
     </aside>

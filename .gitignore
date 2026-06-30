@@ -53,3 +53,4 @@ storage/loclone-db.json
 storage/exports/
 _research/
 
+.env*

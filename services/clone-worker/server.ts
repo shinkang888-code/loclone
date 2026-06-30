@@ -6,6 +6,30 @@ import type { WorkerJobRequest } from "./types.js";
 const PORT = Number(process.env.PORT ?? process.env.CLONE_WORKER_PORT ?? 3100);
 const HOST = process.env.CLONE_WORKER_HOST ?? "0.0.0.0";
 
+const jobQueue: string[] = [];
+let queueRunning = false;
+
+async function drainJobQueue(): Promise<void> {
+  if (queueRunning) return;
+  queueRunning = true;
+  try {
+    while (jobQueue.length > 0) {
+      const jobId = jobQueue.shift()!;
+      await processJob(jobId);
+    }
+  } finally {
+    queueRunning = false;
+    if (jobQueue.length > 0) {
+      void drainJobQueue();
+    }
+  }
+}
+
+function enqueueJob(jobId: string): void {
+  jobQueue.push(jobId);
+  void drainJobQueue();
+}
+
 function readBody(req: http.IncomingMessage): Promise<string> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
@@ -27,9 +51,10 @@ const server = http.createServer(async (req, res) => {
   if (method === "GET" && url.pathname === "/health") {
     return json(res, 200, {
       ok: true,
-      version: "0.1.0",
+      version: "0.1.1",
       browserPool: browserPoolStats(),
       queueDepth: queueDepth(),
+      pendingInQueue: jobQueue.length,
     });
   }
 
@@ -37,7 +62,7 @@ const server = http.createServer(async (req, res) => {
     try {
       const body = JSON.parse(await readBody(req)) as WorkerJobRequest;
       const job = createJob(body);
-      void processJob(job.jobId);
+      enqueueJob(job.jobId);
       return json(res, 202, {
         jobId: job.jobId,
         status: job.status,
@@ -80,7 +105,9 @@ const server = http.createServer(async (req, res) => {
           last += 1;
         }
         if (job.status === "success" || job.status === "failed") {
-          res.write(`data: ${JSON.stringify({ ts: new Date().toISOString(), level: "info", message: "DONE" })}\n\n`);
+          res.write(
+            `data: ${JSON.stringify({ ts: new Date().toISOString(), level: "info", message: "DONE" })}\n\n`,
+          );
           clearInterval(interval);
           res.end();
         }
@@ -105,8 +132,9 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log(`Loclone Clone Worker listening on ${HOST}:${PORT}`);
+  console.log(`Lclone Clone Worker listening on ${HOST}:${PORT}`);
   console.log(`LOCLONE_ROOT=${process.env.LOCLONE_ROOT ?? "(auto ../..)"}`);
+  console.log(`RENDER=${process.env.RENDER ?? "false"} perJobBrowser=${process.env.WORKER_BROWSER_PER_JOB ?? "auto"}`);
 });
 
 process.on("SIGTERM", async () => {

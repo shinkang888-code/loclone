@@ -1,8 +1,9 @@
+import { LCLONE_BRAND } from "@/lib/brand/tokens";
+
 export const BRAND = {
-  name: "Loclone",
-  tagline: "웹사이트 클론 · 납품 · QA 플랫폼",
-  description:
-    "URL 하나로 클론 → 프리뷰 → QA → ZIP 납품까지. 누구나 따라 할 수 있는 5단계 워크플로우.",
+  name: LCLONE_BRAND.name,
+  tagline: LCLONE_BRAND.taglineKo,
+  description: LCLONE_BRAND.description,
 } as const;
 
 export const WORKFLOW_STEPS = [

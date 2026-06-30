@@ -40,7 +40,7 @@ export function DashboardHeader({ email }: { email?: string }) {
   }
 
   return (
-    <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-background/95 px-6 backdrop-blur">
+    <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b border-white/10 bg-background/80 px-6 backdrop-blur-md">
       <nav className="flex items-center gap-1 text-sm text-muted-foreground">
         {crumbs.map((crumb, i) => (
           <span key={crumb.href} className="flex items-center gap-1">

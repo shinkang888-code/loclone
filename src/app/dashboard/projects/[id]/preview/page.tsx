@@ -40,10 +40,18 @@ export default function ProjectPreviewPage() {
     <div className="mx-auto max-w-6xl space-y-6">
       <div className="flex items-center gap-4">
         <Image src="/images/dashboard/step-3-preview.svg" alt="" width={80} height={48} />
-        <SectionHeading title={project.name} description="원본 vs 클론 프리뷰 비교" />
+        <SectionHeading
+          title={project.name}
+          description="클론 복사본 미리보기 · 원본과 비교"
+        />
       </div>
       <ProjectTabs projectId={id} pathname={pathname} />
-      <PreviewCompare sourceUrl={sourceUrl} clonePath={clonePath} />
+      <PreviewCompare
+        sourceUrl={sourceUrl}
+        clonePath={clonePath}
+        mode={latestRun?.mode}
+        projectId={id}
+      />
     </div>
   );
 }

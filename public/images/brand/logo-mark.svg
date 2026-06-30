@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none" role="img" aria-label="Lclone">
+  <defs>
+    <linearGradient id="lGrad" x1="8" y1="6" x2="40" y2="42" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#7EB8E8"/>
+      <stop offset="45%" stop-color="#4A7DB8"/>
+      <stop offset="100%" stop-color="#2D5A87"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#B8C8D8" stop-opacity="0.35"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="12" fill="#141B26"/>
+  <path d="M14 10h14v6H20v22h-6V10z" fill="url(#lGrad)"/>
+  <path d="M14 10h14v6H20v22h-6V10z" fill="url(#metal)"/>
+  <circle cx="30" cy="30" r="9" fill="#1E2836" stroke="url(#lGrad)" stroke-width="1.5"/>
+  <path d="M26 30a4 4 0 0 1 4-4v2a2 2 0 0 0-2 2 2 2 0 0 0 2 2v2a4 4 0 0 1-4-4z" fill="#6B9FD4"/>
+  <path d="M34 30a4 4 0 0 1-4 4v-2a2 2 0 0 0 2-2 2 2 0 0 0-2-2v-2a4 4 0 0 1 4 4z" fill="#4A7DB8"/>
+  <text x="30" y="33" text-anchor="middle" font-size="7" font-family="system-ui,sans-serif" font-weight="700" fill="#A8D4FF">c</text>
+</svg>

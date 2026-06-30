@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+import { LCLONE_BRAND } from "@/lib/brand/tokens";
 import { buttonVariants } from "@/components/ui/button";
 
 export function PageHero({
@@ -23,14 +24,30 @@ export function PageHero({
   return (
     <section
       className={cn(
-        "relative overflow-hidden rounded-2xl border bg-gradient-to-br from-indigo-600 via-indigo-700 to-violet-700 p-8 text-white shadow-lg md:p-10",
+        "relative min-h-[280px] overflow-hidden rounded-2xl border border-white/10 lclone-card-glow",
         className,
       )}
     >
-      <div className="relative z-10 grid gap-8 lg:grid-cols-[1fr_280px] lg:items-center">
-        <div className="space-y-4">
+      <Image
+        src={LCLONE_BRAND.images.heroReplication}
+        alt=""
+        fill
+        className="object-cover opacity-40"
+        sizes="(max-width: 1200px) 100vw, 1200px"
+        priority
+      />
+      <div className="absolute inset-0 lclone-hero-bg opacity-90" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_80%_30%,rgba(77,163,255,0.15),transparent_50%)]" />
+
+      <div className="relative z-10 grid gap-8 p-8 md:p-10 lg:grid-cols-[1fr_320px] lg:items-center">
+        <div className="space-y-5 text-white">
+          <p className="text-xs font-semibold uppercase tracking-widest text-[#A8D4FF]">
+            {LCLONE_BRAND.tagline}
+          </p>
           <h1 className="text-3xl font-bold tracking-tight md:text-4xl">{title}</h1>
-          <p className="max-w-xl text-base text-indigo-100 md:text-lg">{description}</p>
+          <p className="max-w-xl text-base leading-relaxed text-[#A8B4C4] md:text-lg">
+            {description}
+          </p>
           {actions && actions.length > 0 && (
             <div className="flex flex-wrap gap-3 pt-2">
               {actions.map((action) => (
@@ -40,8 +57,8 @@ export function PageHero({
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     action.variant === "outline"
-                      ? "border-white/30 bg-white/10 text-white hover:bg-white/20"
-                      : "bg-white text-indigo-700 hover:bg-indigo-50",
+                      ? "border-white/25 bg-white/5 text-white hover:bg-white/10"
+                      : "border-0 bg-gradient-to-r from-[#4A7DB8] to-[#6B9FD4] text-white shadow-lg shadow-[#4A7DB8]/25 hover:opacity-95",
                   )}
                 >
                   {action.label}
@@ -51,19 +68,18 @@ export function PageHero({
           )}
         </div>
         {image && (
-          <div className="hidden overflow-hidden rounded-xl border border-white/20 bg-white/10 lg:block">
+          <div className="overflow-hidden rounded-xl border border-white/15 bg-[#141B26]/60 shadow-2xl backdrop-blur-sm">
             <Image
               src={image}
               alt={imageAlt ?? title}
-              width={560}
-              height={280}
+              width={640}
+              height={360}
               className="h-auto w-full"
               priority
             />
           </div>
         )}
       </div>
-      <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-white/10 blur-3xl" />
     </section>
   );
 }

@@ -1,5 +1,15 @@
 # Clone Worker + Blob 배포 가이드
 
+> **상태 (2026-06-30):** 아래 인프라가 CLI로 프로비저닝 완료됨.
+
+| 리소스 | URL / ID |
+|--------|----------|
+| Vercel 앱 | https://loclone.vercel.app |
+| Blob Store | `loclone-clone` (`store_JVxoBmxU3ufF4j2Z`, iad1, public) |
+| Render Worker | https://loclone-clone-worker.onrender.com (`srv-d91mvfdaeets73fqjek0`) |
+
+Production 환경 변수: `DATABASE_URL`, `LOCLONE_AUTH_MODE`, `BLOB_READ_WRITE_TOKEN`, `CLONE_WORKER_URL`
+
 ## 1. Vercel Blob (에셋 영구 저장)
 
 1. [Vercel Dashboard → Storage → Blob](https://vercel.com/dashboard/stores) 에서 **Create Store** → 프로젝트 `loclone` 연결

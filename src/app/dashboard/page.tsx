@@ -14,6 +14,7 @@ import { StatCard } from "@/components/dashboard/stat-card";
 import { StepGuideCard } from "@/components/dashboard/step-guide-card";
 import { SectionHeading } from "@/components/dashboard/section-heading";
 import { BRAND, WORKFLOW_STEPS } from "@/lib/dashboard/content";
+import { LCLONE_BRAND } from "@/lib/brand/tokens";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -52,10 +53,10 @@ export default function DashboardHomePage() {
   return (
     <div className="mx-auto max-w-6xl space-y-10">
       <PageHero
-        title="고객 납품용 웹 클론 워크스페이스"
+        title="디지털 복제 워크스페이스"
         description={BRAND.description}
-        image="/images/dashboard/hero-dashboard.svg"
-        imageAlt="Loclone 대시보드"
+        image={LCLONE_BRAND.images.heroDashboard}
+        imageAlt="Lclone 대시보드"
         actions={[
           { label: "프로젝트 시작", href: "/dashboard/projects" },
           { label: "사용 가이드", href: "/dashboard/guide", variant: "outline" },
@@ -87,8 +88,9 @@ export default function DashboardHomePage() {
         </div>
       </section>
 
-      <section className="rounded-2xl border bg-gradient-to-r from-slate-50 to-indigo-50 p-8">
-        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+      <section className="relative overflow-hidden rounded-2xl border border-white/10 p-8 lclone-card-glow">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#141B26] to-[#1E2836]" />
+        <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <h2 className="text-xl font-bold">납품 ZIP에 포함되는 항목</h2>
             <p className="mt-1 text-sm text-muted-foreground">

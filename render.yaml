@@ -18,6 +18,10 @@ services:
         value: /tmp/loclone
       - key: WORKER_BROWSER_POOL
         value: "1"
+      - key: WORKER_BROWSER_PER_JOB
+        value: "true"
+      - key: NODE_OPTIONS
+        value: "--max-old-space-size=768"
       - key: WORKER_HEADLESS
         value: "true"
       - key: BLOB_READ_WRITE_TOKEN
