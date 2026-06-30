@@ -1,31 +1,46 @@
 "use client";
 
 import { FormEvent, useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import type { CloneResponse, CloneResult } from "@/types/clone";
+import { ModeSelector } from "@/components/clone/mode-selector";
+import type { CloneResponse, CloneResult, CloneMode, CloneOptions } from "@/types/clone";
+import { MODE_PRESETS } from "@/types/clone";
 
 const EXAMPLE_URL = "https://www.apple.com";
 
 export function CloneWorkspace() {
   const [url, setUrl] = useState(EXAMPLE_URL);
+  const [mode, setMode] = useState<CloneMode>("static");
+  const [options, setOptions] = useState<CloneOptions>(MODE_PRESETS.static);
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CloneResult | null>(null);
+  const [waitingHint, setWaitingHint] = useState<string | null>(null);
 
   const onSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setIsLoading(true);
     setError(null);
     setResult(null);
+    setWaitingHint(null);
 
     try {
       const response = await fetch("/api/clone", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, mode, options }),
       });
       const data = (await response.json()) as CloneResponse;
-      if (!response.ok || !data.ok || !data.result) {
+      if (!response.ok || !data.ok) {
+        throw new Error(data.error ?? "클로닝에 실패했습니다.");
+      }
+      if (data.waitingRequired) {
+        setWaitingHint(data.error ?? "/dashboard/waiting");
+        return;
+      }
+      if (!data.result) {
         throw new Error(data.error ?? "클로닝에 실패했습니다.");
       }
       setResult(data.result);
@@ -46,8 +61,22 @@ export function CloneWorkspace() {
         Web Clone Runner
       </h1>
       <p className="mt-2 text-sm text-muted-foreground">
-        URL을 입력하면 HTML/메타데이터를 추출하고, 아티팩트를 로컬 프로젝트에 저장합니다.
+        6가지 클론 모드 — static은 즉시, render/mirror는 Worker 필요
       </p>
+
+      <div className="mt-6">
+        <ModeSelector
+          mode={mode}
+          options={options}
+          onModeChange={(m) => {
+            setMode(m);
+            setOptions(MODE_PRESETS[m]);
+          }}
+          onOptionsChange={setOptions}
+          showAdvanced={showAdvanced}
+          onToggleAdvanced={() => setShowAdvanced((v) => !v)}
+        />
+      </div>
 
       <form className="mt-6 space-y-3" onSubmit={onSubmit}>
         <label className="block text-sm font-medium text-foreground" htmlFor="clone-url">
@@ -75,8 +104,24 @@ export function CloneWorkspace() {
       {error ? (
         <div className="mt-6 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
           {error}
+          {error.includes("Worker") && (
+            <p className="mt-2">
+              <Link href="/dashboard/waiting" className="underline">
+                대기 목록
+              </Link>
+            </p>
+          )}
         </div>
       ) : null}
+
+      {waitingHint && (
+        <p className="mt-4 text-sm text-amber-700">
+          <Link href="/dashboard/waiting" className="underline">
+            대기 목록
+          </Link>{" "}
+          확인
+        </p>
+      )}
 
       {result ? (
         <div className="mt-6 space-y-3 rounded-lg border p-4 text-sm">
@@ -93,26 +138,13 @@ export function CloneWorkspace() {
             </a>
           </p>
           <p>
-            <span className="font-medium">HTML Snapshot:</span> {result.htmlSnapshotPath}
-          </p>
-          <p>
-            <span className="font-medium">Metadata:</span> {result.metadataPath}
-          </p>
-          <p>
             <span className="font-medium">Downloaded Assets:</span> {result.downloadedAssets.length}
           </p>
-
-          {result.downloadedAssets.length > 0 ? (
-            <ul className="list-disc space-y-1 pl-5 text-muted-foreground">
-              {result.downloadedAssets.slice(0, 6).map((asset) => (
-                <li key={`${asset.sourceUrl}-${asset.localPath}`}>
-                  <a className="underline" href={asset.localPath} target="_blank" rel="noreferrer">
-                    {asset.localPath}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          {result.pagesCrawled != null && (
+            <p>
+              <span className="font-medium">Pages:</span> {result.pagesCrawled}
+            </p>
+          )}
         </div>
       ) : null}
     </section>

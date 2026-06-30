@@ -7,6 +7,7 @@ export const dynamic = "force-dynamic";
 export async function GET() {
   try {
     await requireUser();
+    await scanWaitingItems();
     const items = await listWaitingItems();
     return NextResponse.json({ ok: true, items });
   } catch {

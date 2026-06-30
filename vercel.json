@@ -4,5 +4,11 @@
       "path": "/api/sites/check",
       "schedule": "*/15 * * * *"
     }
-  ]
+  ],
+  "experimentalServices": {
+    "frontend": {
+      "routePrefix": "/",
+      "framework": "nextjs"
+    }
+  }
 }

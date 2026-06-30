@@ -24,15 +24,39 @@ export interface Project {
 
 export type CloneRunStatus = "pending" | "running" | "success" | "failed";
 
+export type CloneMode =
+  | "static"
+  | "render"
+  | "full"
+  | "mirror"
+  | "spa-states"
+  | "agent-pixel";
+
+export interface CloneRunOptions {
+  maxDepth?: number;
+  maxPages?: number;
+  sameOriginOnly?: boolean;
+  seedSitemaps?: boolean;
+  browser?: "playwright" | "puppeteer";
+  scraperBackend?: "local" | "crawl4ai" | "firecrawl";
+  headless?: boolean;
+}
+
 export interface CloneRun {
   id: string;
   projectId: string;
   url: string;
+  mode: CloneMode;
+  options: CloneRunOptions | null;
   status: CloneRunStatus;
+  progress: number;
   finalUrl: string | null;
   error: string | null;
   runId: string | null;
   artifactDir: string | null;
+  workerJobId: string | null;
+  logPath: string | null;
+  logs?: Array<{ ts: string; level: "info" | "warn" | "error"; message: string }>;
   startedAt: string;
   finishedAt: string | null;
 }
@@ -66,6 +90,9 @@ export interface QaReport {
   seoScore: number;
   perfScore: number;
   a11yScore: number;
+  designScore?: number;
+  designTokens?: string[];
+  techStack?: string[];
   issues: QaIssue[];
   generatedAt: string;
 }
@@ -104,6 +131,7 @@ export type WaitingCategory =
   | "billing"
   | "browser_mcp"
   | "database"
+  | "clone_worker"
   | "other";
 
 export interface WaitingItem {

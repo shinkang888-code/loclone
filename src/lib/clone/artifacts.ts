@@ -1,10 +1,22 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
+import {
+  getClonesDir,
+  getClonePublicPath,
+  getResearchRunsDir,
+  isServerlessRuntime,
+} from "@/lib/storage/paths";
+import {
+  isBlobStorageEnabled,
+  uploadCloneAsset,
+  uploadCloneHtml,
+} from "@/lib/storage/blob-store";
 import type { CloneResult, SavedAssetInfo } from "@/types/clone";
 import type { ExtractedSiteData } from "@/types/clone";
 
 const MAX_ASSETS = 12;
 const MAX_ASSET_BYTES = 8 * 1024 * 1024;
+const MAX_HTML_IN_DB = 1_500_000;
 
 function makeRunId(url: string): string {
   const hostname = new URL(url).hostname.replaceAll(".", "-");
@@ -33,6 +45,7 @@ async function downloadAsset(
   sourceUrl: string,
   targetDir: string,
   index: number,
+  resultRunId: string,
 ): Promise<SavedAssetInfo | null> {
   try {
     const response = await fetch(sourceUrl, { redirect: "follow" });
@@ -58,12 +71,23 @@ async function downloadAsset(
     const ext =
       path.extname(urlObj.pathname) || extFromContentType(contentType);
     const fileName = `${String(index + 1).padStart(2, "0")}-${baseName}${ext}`;
-    const fullPath = path.join(targetDir, fileName);
 
+    if (isBlobStorageEnabled()) {
+      const blobUrl = await uploadCloneAsset(
+        resultRunId,
+        fileName,
+        bytes,
+        contentType ?? undefined,
+      );
+      return { sourceUrl, localPath: blobUrl };
+    }
+
+    const fullPath = path.join(targetDir, fileName);
     await writeFile(fullPath, bytes);
+    const publicBase = getClonePublicPath(resultRunId);
     return {
       sourceUrl,
-      localPath: `/clones/${path.basename(path.dirname(targetDir))}/assets/${fileName}`,
+      localPath: `${publicBase}/assets/${fileName}`,
     };
   } catch {
     return null;
@@ -75,10 +99,8 @@ export async function saveCloneArtifacts(
   extracted: ExtractedSiteData,
 ): Promise<CloneResult> {
   const runId = makeRunId(sourceUrl);
-  const root = process.cwd();
-
-  const docsRunDir = path.join(root, "docs", "research", "runs", runId);
-  const publicRunDir = path.join(root, "public", "clones", runId);
+  const docsRunDir = path.join(getResearchRunsDir(), runId);
+  const publicRunDir = path.join(getClonesDir(), runId);
   const publicAssetDir = path.join(publicRunDir, "assets");
 
   await mkdir(docsRunDir, { recursive: true });
@@ -93,7 +115,7 @@ export async function saveCloneArtifacts(
   const candidates = extracted.assetUrls.slice(0, MAX_ASSETS);
 
   for (let i = 0; i < candidates.length; i += 1) {
-    const asset = await downloadAsset(candidates[i], publicAssetDir, i);
+    const asset = await downloadAsset(candidates[i], publicAssetDir, i, runId);
     if (asset) {
       downloadedAssets.push(asset);
     }
@@ -109,9 +131,26 @@ export async function saveCloneArtifacts(
     totalDetectedAssets: extracted.assetUrls.length,
     downloadedAssets,
     createdAt: new Date().toISOString(),
+    runtime: isServerlessRuntime() ? "serverless" : "local",
   };
 
   await writeFile(metadataPath, JSON.stringify(metadata, null, 2), "utf-8");
+
+  const htmlForDb =
+    extracted.html.length > MAX_HTML_IN_DB
+      ? extracted.html.slice(0, MAX_HTML_IN_DB)
+      : extracted.html;
+
+  let htmlBlobUrl: string | undefined;
+  if (isBlobStorageEnabled()) {
+    try {
+      htmlBlobUrl = await uploadCloneHtml(runId, extracted.html);
+    } catch {
+      /* DB inline fallback */
+    }
+  }
+
+  const persistInline = isServerlessRuntime() || isBlobStorageEnabled();
 
   return {
     runId,
@@ -120,8 +159,11 @@ export async function saveCloneArtifacts(
     title: extracted.title,
     description: extracted.description,
     ogImage: extracted.ogImage,
-    htmlSnapshotPath,
+    htmlSnapshotPath: htmlBlobUrl ?? htmlSnapshotPath,
     metadataPath,
     downloadedAssets,
+    htmlContent: persistInline ? htmlForDb : undefined,
+    metadataJson: persistInline ? metadata : undefined,
+    htmlBlobUrl,
   };
 }

@@ -13,8 +13,14 @@ export async function POST(request: Request, { params }: Params) {
     const user = await requireUser();
     const { id } = await params;
     const body = cloneRequestSchema.parse(await request.json());
-    const { run, result } = await runCloneForProject(id, body.url, user.id);
-    return NextResponse.json({ ok: true, run, result });
+    const { run, result, waitingHint } = await runCloneForProject(
+      id,
+      body.url,
+      user.id,
+      body.mode,
+      body.options,
+    );
+    return NextResponse.json({ ok: true, run, result, waitingHint });
   } catch (error) {
     const msg = error instanceof Error ? error.message : "error";
     if (msg === "UNAUTHORIZED") return NextResponse.json({ ok: false, error: msg }, { status: 401 });

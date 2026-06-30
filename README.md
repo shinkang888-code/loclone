@@ -58,3 +58,8 @@ Cursor/Claude에서:
 ## 납품
 
 `docs/HANDOFF.md` + `/api/projects/[id]/export` ZIP
+
+## 업그레이드 계획
+
+- **실행 로드맵:** `docs/plan/UPGRADE_ROADMAP.md` (Phase 0~4, GitHub+HF+Kaggle 통합)
+- **상세 설계:** `docs/plan/CLONE_UPGRADE_PLAN.md`

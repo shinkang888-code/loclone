@@ -1,5 +1,6 @@
 import { newId, readDb, writeDb } from "./file-store";
 import type { WaitingCategory, WaitingItem } from "./types";
+import { scanCloneWorkerWaiting } from "@/lib/clone/waiting-bridge";
 
 const ENV_CHECKS: Array<{
   keys: string[];
@@ -35,6 +36,13 @@ const ENV_CHECKS: Array<{
     category: "credentials",
     title: "PageSpeed API (선택)",
     description: "Lighthouse 대신 PageSpeed API로 성능 점수를 가져올 수 있습니다.",
+  },
+  {
+    keys: ["CLONE_WORKER_URL"],
+    category: "clone_worker",
+    title: "Clone Worker 서비스 (render/mirror/spa)",
+    description:
+      "docker compose up clone-worker 실행 후 CLONE_WORKER_URL=http://localhost:3100 을 .env.local에 추가하세요.",
   },
 ];
 
@@ -91,6 +99,8 @@ export async function scanWaitingItems(): Promise<WaitingItem[]> {
       }
     }
   });
+
+  await scanCloneWorkerWaiting();
 
   const db = await readDb();
   return db.waitingItems.filter((w) => w.status === "pending");

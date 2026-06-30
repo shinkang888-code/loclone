@@ -2,6 +2,7 @@ import { readFile } from "node:fs/promises";
 import { readDb } from "@/lib/store/file-store";
 import type { QaIssue, QaReport } from "@/lib/store/types";
 import { newId, writeDb } from "@/lib/store/file-store";
+import { detectTechStack, extractDesignTokens } from "@/lib/qa/analysis";
 
 export async function runQaForProject(projectId: string): Promise<QaReport> {
   const db = await readDb();
@@ -20,6 +21,9 @@ export async function runQaForProject(projectId: string): Promise<QaReport> {
   let seoScore = 50;
   let perfScore = 70;
   let a11yScore = 60;
+  let designScore = 65;
+  let designTokens: string[] = [];
+  let techStack: string[] = [];
 
   if (!latestRun) {
     issues.push({
@@ -35,13 +39,42 @@ export async function runQaForProject(projectId: string): Promise<QaReport> {
     const metaArtifact = db.artifacts.find(
       (a) => a.runId === latestRun.id && a.type === "meta",
     );
+    const htmlArtifact = db.artifacts.find(
+      (a) => a.runId === latestRun.id && a.type === "html",
+    );
+
+    designTokens = await extractDesignTokens(
+      htmlArtifact?.path ?? null,
+      typeof htmlArtifact?.metadata?.htmlContent === "string"
+        ? htmlArtifact.metadata.htmlContent
+        : null,
+    );
+    techStack = await detectTechStack(
+      htmlArtifact?.path ?? null,
+      typeof htmlArtifact?.metadata?.htmlContent === "string"
+        ? htmlArtifact.metadata.htmlContent
+        : null,
+    );
+    if (designTokens.length >= 5) designScore += 15;
+    if (techStack.length > 0) {
+      issues.push({
+        category: "tech",
+        severity: "low",
+        message: `감지된 스택: ${techStack.join(", ")}`,
+      });
+    }
+
     if (metaArtifact) {
       try {
-        const raw = await readFile(metaArtifact.path, "utf-8");
-        const meta = JSON.parse(raw) as {
-          title?: string;
-          description?: string;
-        };
+        let meta: { title?: string; description?: string };
+        if (metaArtifact.metadata?.metadataJson) {
+          meta = metaArtifact.metadata.metadataJson as { title?: string; description?: string };
+        } else if (metaArtifact.metadata?.title) {
+          meta = metaArtifact.metadata as { title?: string; description?: string };
+        } else {
+          const raw = await readFile(metaArtifact.path, "utf-8");
+          meta = JSON.parse(raw) as { title?: string; description?: string };
+        }
         if (!meta.title || meta.title === "Untitled") {
           issues.push({
             category: "seo",
@@ -103,6 +136,7 @@ export async function runQaForProject(projectId: string): Promise<QaReport> {
   seoScore = Math.max(0, Math.min(100, seoScore));
   perfScore = Math.max(0, Math.min(100, perfScore));
   a11yScore = Math.max(0, Math.min(100, a11yScore));
+  designScore = Math.max(0, Math.min(100, designScore));
 
   const report: QaReport = {
     id: newId(),
@@ -110,6 +144,9 @@ export async function runQaForProject(projectId: string): Promise<QaReport> {
     seoScore,
     perfScore,
     a11yScore,
+    designScore,
+    designTokens,
+    techStack,
     issues,
     generatedAt: new Date().toISOString(),
   };

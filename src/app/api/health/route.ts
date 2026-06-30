@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { readDb } from "@/lib/store/file-store";
+import { isPostgresConfigured, readDb } from "@/lib/store/file-store";
 
 export const dynamic = "force-dynamic";
 
@@ -8,7 +8,7 @@ export async function GET() {
     const db = await readDb();
     return NextResponse.json({
       ok: true,
-      store: "file",
+      store: isPostgresConfigured() ? "neon" : "file",
       users: db.users.length,
       projects: db.projects.length,
       runs: db.cloneRuns.length,

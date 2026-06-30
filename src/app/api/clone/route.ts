@@ -1,47 +1,42 @@
 import { NextResponse } from "next/server";
-import { extractSiteData } from "@/lib/clone/extract";
-import { saveCloneArtifacts } from "@/lib/clone/artifacts";
-import { normalizeUrl } from "@/lib/clone/normalize-url";
-import type { CloneRequest, CloneResponse } from "@/types/clone";
+import { cloneRequestSchema } from "@/lib/schemas/project";
+import { runCloneForProject } from "@/lib/clone/run-clone";
+import { requireUser } from "@/lib/auth/session";
+import { readDb } from "@/lib/store/file-store";
+import type { CloneResponse } from "@/types/clone";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const FETCH_TIMEOUT_MS = 20_000;
-
 export async function POST(request: Request) {
   try {
-    const body = (await request.json()) as CloneRequest;
-    if (!body.url) {
+    const user = await requireUser();
+    const body = cloneRequestSchema.parse(await request.json());
+
+    const db = await readDb();
+    const project = db.projects[0];
+    if (!project) {
       return NextResponse.json<CloneResponse>(
-        { ok: false, error: "URL을 입력해 주세요." },
+        { ok: false, error: "프로젝트를 먼저 생성하세요." },
         { status: 400 },
       );
     }
 
-    const targetUrl = normalizeUrl(body.url);
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+    const { result, waitingHint } = await runCloneForProject(
+      project.id,
+      body.url,
+      user.id,
+      body.mode,
+      body.options,
+    );
 
-    const response = await fetch(targetUrl, {
-      signal: controller.signal,
-      redirect: "follow",
-      headers: {
-        "user-agent":
-          "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36",
-      },
-    }).finally(() => clearTimeout(timeout));
-
-    if (!response.ok) {
-      return NextResponse.json<CloneResponse>(
-        { ok: false, error: `대상 페이지 요청 실패: ${response.status}` },
-        { status: 502 },
-      );
+    if (!result) {
+      return NextResponse.json<CloneResponse>({
+        ok: true,
+        waitingRequired: true,
+        error: waitingHint ?? "대기 목록 확인",
+      });
     }
-
-    const html = await response.text();
-    const extracted = extractSiteData(html, targetUrl, response.url);
-    const result = await saveCloneArtifacts(targetUrl, extracted);
 
     return NextResponse.json<CloneResponse>({ ok: true, result });
   } catch (error) {

@@ -17,11 +17,26 @@ export async function GET(_request: Request, { params }: Params) {
     const enriched = await Promise.all(
       artifacts.map(async (artifact) => {
         let content: string | null = null;
-        if (artifact.type === "html" || artifact.type === "meta") {
-          try {
-            content = await readFile(artifact.path, "utf-8");
-          } catch {
-            content = null;
+        if (artifact.type === "html") {
+          const inline = artifact.metadata?.htmlContent;
+          if (typeof inline === "string") {
+            content = inline;
+          } else {
+            try {
+              content = await readFile(artifact.path, "utf-8");
+            } catch {
+              content = null;
+            }
+          }
+        } else if (artifact.type === "meta") {
+          if (artifact.metadata?.metadataJson) {
+            content = JSON.stringify(artifact.metadata.metadataJson, null, 2);
+          } else {
+            try {
+              content = await readFile(artifact.path, "utf-8");
+            } catch {
+              content = null;
+            }
           }
         }
         return { ...artifact, content };

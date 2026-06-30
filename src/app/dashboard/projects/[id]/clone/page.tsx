@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useParams, usePathname } from "next/navigation";
+import Image from "next/image";
 import { CloneRunner } from "@/components/clone/clone-runner";
 import { ProjectTabs } from "@/components/projects/project-tabs";
 import type { Project } from "@/lib/store/types";
@@ -22,17 +23,27 @@ export default function ProjectClonePage() {
     load();
   }, [load]);
 
-  if (!project) return <p>불러오는 중…</p>;
+  if (!project) return <p className="text-muted-foreground">불러오는 중…</p>;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{project.name} — 클론</h1>
+    <div className="mx-auto max-w-5xl space-y-6">
+      <div className="flex items-center gap-4">
+        <Image src="/images/dashboard/step-2-clone.svg" alt="" width={64} height={40} />
+        <div>
+          <h1 className="text-2xl font-bold">{project.name}</h1>
+          <p className="text-sm text-muted-foreground">클론 실행 · 6가지 모드</p>
+        </div>
+      </div>
       <ProjectTabs projectId={id} pathname={pathname} />
       <CloneRunner projectId={id} defaultUrl={project.targetUrls[0]} />
-      <div className="rounded-lg border bg-muted/40 p-4 text-sm">
-        <p className="font-medium">에이전트 빌드 (수동)</p>
-        <p className="mt-1 text-muted-foreground">
-          Cursor/Claude에서 <code className="font-mono">/clone-website {project.targetUrls[0] ?? "URL"}</code> 실행
+      <div className="rounded-xl border border-violet-200 bg-violet-50 p-5 text-sm">
+        <p className="font-semibold text-violet-900">AI 픽셀 클론 (agent-pixel)</p>
+        <p className="mt-1 text-violet-800">
+          Cursor/Claude에서{" "}
+          <code className="rounded bg-white px-1.5 py-0.5 font-mono">
+            /clone-website {project.targetUrls[0] ?? "URL"}
+          </code>{" "}
+          실행
         </p>
       </div>
     </div>

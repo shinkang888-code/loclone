@@ -25,7 +25,7 @@ export default function DashboardLayout({
       <AppSidebar pathname={pathname} />
       <div className="flex min-h-screen flex-1 flex-col">
         <DashboardHeader email={email} />
-        <div className="flex-1 p-6">{children}</div>
+        <div className="flex-1 bg-muted/20 p-6 md:p-8">{children}</div>
       </div>
     </div>
   );

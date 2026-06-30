@@ -1,0 +1,20 @@
+{
+  "name": "loclone-clone-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch server.ts",
+    "start": "node --import tsx server.ts",
+    "postinstall": "playwright install chromium || true"
+  },
+  "dependencies": {
+    "@vercel/blob": "^1.1.1",
+    "playwright": "^1.52.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24",
+    "tsx": "^4.19.0",
+    "typescript": "^5"
+  }
+}
