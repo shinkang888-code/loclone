@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ExternalLink,
@@ -10,10 +10,12 @@ import {
   Tablet,
   CheckCircle2,
   Download,
+  AlertTriangle,
 } from "lucide-react";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { isLikelyEmptyPreview } from "@/lib/clone/preview-html";
 
 type Viewport = "desktop" | "tablet" | "mobile";
 
@@ -46,6 +48,7 @@ export function ClonePreviewPanel({
 }) {
   const [viewport, setViewport] = useState<Viewport>("desktop");
   const [fullscreen, setFullscreen] = useState(false);
+  const [previewIssue, setPreviewIssue] = useState<"empty" | "load-error" | null>(null);
 
   const activeWidth = useMemo(
     () => VIEWPORTS.find((v) => v.id === viewport)?.width ?? "100%",
@@ -55,6 +58,27 @@ export function ClonePreviewPanel({
   const openUrl = previewUrl.startsWith("http")
     ? previewUrl
     : `${typeof window !== "undefined" ? window.location.origin : ""}${previewUrl}`;
+
+  useEffect(() => {
+    let cancelled = false;
+    setPreviewIssue(null);
+
+    fetch(previewUrl, { cache: "no-store" })
+      .then(async (res) => {
+        if (!res.ok) throw new Error("preview fetch failed");
+        const html = await res.text();
+        if (!cancelled && isLikelyEmptyPreview(html)) {
+          setPreviewIssue("empty");
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPreviewIssue("load-error");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [previewUrl]);
 
   return (
     <div
@@ -132,6 +156,30 @@ export function ClonePreviewPanel({
           </div>
         </div>
       </div>
+
+      {previewIssue === "empty" && (
+        <div className="mx-4 mt-4 rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-100">
+          <p className="flex items-start gap-2 font-medium">
+            <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+            미리보기가 비어 보일 수 있습니다
+          </p>
+          <p className="mt-1 text-xs text-amber-100/90">
+            JavaScript로 그려지는 사이트(React, Next.js 등)는 <strong>빠른 추출</strong> 대신{" "}
+            <strong>JS 렌더</strong> 또는 <strong>미러</strong> 모드를 사용하세요. example.com처럼
+            텍스트만 있는 테스트 페이지는 원래 디자인이 거의 없습니다.
+          </p>
+        </div>
+      )}
+
+      {previewIssue === "load-error" && (
+        <div className="mx-4 mt-4 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          미리보기 HTML을 불러오지 못했습니다.{" "}
+          <a href={openUrl} target="_blank" rel="noreferrer" className="font-medium underline">
+            새 탭에서 열기
+          </a>
+          로 확인해 보세요.
+        </div>
+      )}
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-muted/30 px-4 py-2">
         <div className="flex gap-1 rounded-lg border bg-background p-0.5">

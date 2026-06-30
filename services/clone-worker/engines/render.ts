@@ -1,5 +1,4 @@
 import type { Page, Response } from "playwright";
-import { rewriteHtmlLinks } from "../lib/link-rewriter.js";
 import { savePageOutput, makeRunId } from "../lib/output.js";
 import type { CloneOptions, CloneResult } from "../types.js";
 
@@ -57,15 +56,6 @@ export async function renderSinglePage(
     const finalUrl = page.url();
     const meta = parseMeta(html);
 
-    const assetMap = new Map<string, string>();
-    const runId = makeRunId(url);
-    let i = 0;
-    for (const assetUrl of assetBuffers.keys()) {
-      i += 1;
-      assetMap.set(assetUrl, `/clones/${runId}/assets/${String(i).padStart(3, "0")}-asset`);
-    }
-    html = rewriteHtmlLinks(html, finalUrl, assetMap);
-
     return savePageOutput({
       sourceUrl: url,
       finalUrl,
@@ -75,7 +65,7 @@ export async function renderSinglePage(
       ogImage: meta.ogImage,
       assetBuffers,
       pagesCrawled: 1,
-      runId,
+      runId: makeRunId(url),
     });
   } finally {
     page.off("response", onResponse);
