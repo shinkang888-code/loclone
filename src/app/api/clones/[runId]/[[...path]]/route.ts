@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { getHtmlArtifactForResultRun } from "@/lib/clone/artifact-content";
-import { preparePreviewHtml, resolveCloneAsset } from "@/lib/clone/preview-html";
+import { preparePreviewHtml } from "@/lib/clone/preview-html";
+import { resolveCloneAsset } from "@/lib/clone/preview-assets";
 import { isBlobUrl } from "@/lib/storage/blob-store";
 import { getClonesDir } from "@/lib/storage/paths";
 
