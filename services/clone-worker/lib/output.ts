@@ -57,7 +57,7 @@ export async function savePageOutput(params: {
   const publicAssetDir = path.join(publicRunDir, "assets");
   const externalDir = path.join(publicRunDir, "_external");
 
-  if (!useBlob) {
+  if (!useBlob || params.assetBuffers.size > 0) {
     await mkdir(docsRunDir, { recursive: true });
     await mkdir(publicAssetDir, { recursive: true });
     await mkdir(externalDir, { recursive: true });
@@ -97,6 +97,7 @@ export async function savePageOutput(params: {
       /* keep default */
     }
     const fullPath = path.join(subdir, fileName);
+    await mkdir(subdir, { recursive: true });
     await writeFile(fullPath, buffer);
     const relBase = subdir === externalDir ? `_external` : `assets`;
     const localPath = `/clones/${runId}/${relBase}/${fileName}`;
