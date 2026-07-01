@@ -1,5 +1,5 @@
 import type { Page } from "playwright";
-import { setupClonePage, delay } from "../lib/page-setup.js";
+import { delay } from "../lib/page-setup.js";
 import { savePageOutput, makeRunId } from "../lib/output.js";
 import type { CloneOptions, CloneResult } from "../types.js";
 
@@ -28,7 +28,7 @@ export async function renderSinglePage(
   url: string,
   _options?: CloneOptions,
 ): Promise<CloneResult> {
-  await setupClonePage(page);
+  page.setDefaultNavigationTimeout(180_000);
   await page.goto(url, { waitUntil: "commit", timeout: 180_000 });
   await delay(12_000);
 

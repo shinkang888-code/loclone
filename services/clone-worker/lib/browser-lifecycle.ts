@@ -11,9 +11,6 @@ const LAUNCH_ARGS = [
   "--disable-background-networking",
   "--disable-default-apps",
   "--disable-sync",
-  "--blink-settings=imagesEnabled=false",
-  "--single-process",
-  "--mute-audio",
 ];
 
 let browser: Browser | null = null;
