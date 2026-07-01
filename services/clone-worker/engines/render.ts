@@ -35,11 +35,6 @@ export async function renderSinglePage(
   await setupClonePage(page);
   await page.goto(url, { waitUntil: "commit", timeout: 180_000 });
   await delay(12_000);
-  await page
-    .waitForFunction(() => (document.body?.innerText?.trim().length ?? 0) > 10, {
-      timeout: 15_000,
-    })
-    .catch(() => {});
 
   const html = await readPageHtml(page);
   const finalUrl = page.url();
