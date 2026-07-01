@@ -8,7 +8,6 @@ const LAUNCH_ARGS = [
   "--disable-software-rasterizer",
   "--disable-extensions",
   "--no-first-run",
-  "--no-zygote",
 ];
 
 let browser: Browser | null = null;

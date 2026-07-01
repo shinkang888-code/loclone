@@ -1,4 +1,4 @@
-import type { Browser, Page } from "playwright";
+import type { Browser, BrowserContext, Page } from "playwright";
 import {
   acquireJobBrowser,
   acquireSharedBrowser,
@@ -7,6 +7,7 @@ import {
   resetSharedBrowser,
   usePerJobBrowser,
 } from "./browser-lifecycle.js";
+import { setupClonePage } from "./page-setup.js";
 import { appendLog, getJob, updateJob } from "./jobs.js";
 import { renderSinglePage } from "../engines/render.js";
 import { crawlSite } from "../engines/site-crawler.js";
@@ -16,17 +17,26 @@ import type { WorkerJob } from "../types.js";
 let activePages = 0;
 const MAX_POOL = Number(process.env.WORKER_BROWSER_POOL ?? 1);
 
+const USER_AGENT =
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36";
+
 async function openPage(): Promise<{
   page: Page;
+  context: BrowserContext;
   perJob: boolean;
   browser: Browser;
 }> {
   const perJob = usePerJobBrowser();
   const browser = perJob ? await acquireJobBrowser() : await acquireSharedBrowser();
-  const page = await browser.newPage();
-  page.setDefaultNavigationTimeout(60_000);
-  page.setDefaultTimeout(60_000);
-  return { page, perJob, browser };
+  const context = await browser.newContext({
+    viewport: { width: 1280, height: 800 },
+    userAgent: USER_AGENT,
+    deviceScaleFactor: 1,
+    ignoreHTTPSErrors: true,
+  });
+  const page = await context.newPage();
+  await setupClonePage(page);
+  return { page, context, perJob, browser };
 }
 
 async function runWithBrowserRetry<T>(
@@ -37,6 +47,7 @@ async function runWithBrowserRetry<T>(
 
   for (let attempt = 1; attempt <= 2; attempt += 1) {
     let page: Page | null = null;
+    let context: BrowserContext | null = null;
     let perJob = false;
     let browser: Browser | null = null;
 
@@ -46,7 +57,7 @@ async function runWithBrowserRetry<T>(
       }
       activePages += 1;
 
-      ({ page, perJob, browser } = await openPage());
+      ({ page, context, perJob, browser } = await openPage());
 
       if (attempt > 1) {
         appendLog(job, `브라우저 재시작 후 재시도 (${attempt}/2)`, "warn");
@@ -66,7 +77,7 @@ async function runWithBrowserRetry<T>(
       }
       throw error;
     } finally {
-      if (page) await page.close().catch(() => {});
+      if (context) await context.close().catch(() => {});
       if (browser) await releaseBrowser(browser, perJob);
       activePages = Math.max(0, activePages - 1);
     }
