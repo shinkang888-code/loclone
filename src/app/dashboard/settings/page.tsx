@@ -15,6 +15,11 @@ const ENV_VARS = [
     required: true,
   },
   {
+    key: "FIRECRAWL_API_KEY",
+    desc: "Firecrawl API 키. SPA(Next.js) JS 렌더·미러 시 Worker 대신 사용.",
+    required: false,
+  },
+  {
     key: "CLONE_WORKER_URL",
     desc: "render/mirror/spa 모드용 Worker URL (예: http://localhost:3100)",
     required: false,

@@ -120,19 +120,24 @@ export function ModeSelector({
           <label className="text-sm">
             scraperBackend
             <select
-              value={options.scraperBackend ?? "local"}
-              onChange={(e) =>
+              value={options.scraperBackend ?? ""}
+              onChange={(e) => {
+                const v = e.target.value as CloneOptions["scraperBackend"];
                 onOptionsChange({
                   ...options,
-                  scraperBackend: e.target.value as CloneOptions["scraperBackend"],
-                })
-              }
+                  scraperBackend: v || undefined,
+                });
+              }}
               className="mt-1 w-full rounded-md border bg-background px-2 py-1"
             >
+              <option value="">자동 (Firecrawl 키 있으면 Firecrawl)</option>
               <option value="local">local (Playwright Worker)</option>
+              <option value="firecrawl">firecrawl (SPA·Next.js 권장)</option>
               <option value="crawl4ai">crawl4ai (대기 목록)</option>
-              <option value="firecrawl">firecrawl (대기 목록)</option>
             </select>
+            <p className="mt-1 text-xs text-muted-foreground">
+              follawyer.co.kr 등 Next.js 사이트는 Firecrawl + JS 렌더 모드를 권장합니다.
+            </p>
           </label>
         </div>
       )}

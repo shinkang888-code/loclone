@@ -8,11 +8,17 @@ import {
   isWorkerConfigured,
   waitForWorkerJob,
 } from "@/lib/clone/worker-client";
+import { runFirecrawlClone } from "@/lib/clone/run-firecrawl";
+import { isFirecrawlConfigured } from "@/lib/clone/firecrawl-client";
 import { newId, readDb, writeDb } from "@/lib/store/file-store";
 import type { CloneRun, Artifact } from "@/lib/store/types";
 import type { CloneResult, CloneMode, CloneOptions } from "@/types/clone";
 import { getClonePublicPath } from "@/lib/storage/paths";
 import { MODE_PRESETS, modeNeedsHuman, modeNeedsWorker } from "@/types/clone";
+
+function resolveScraperBackend(options: CloneOptions): "local" | "firecrawl" | "crawl4ai" {
+  return options.scraperBackend ?? (isFirecrawlConfigured() ? "firecrawl" : "local");
+}
 
 const FETCH_TIMEOUT_MS = 20_000;
 
@@ -59,7 +65,7 @@ async function runWorkerClone(
     throw new Error("Clone Worker가 실행되지 않았습니다. /dashboard/waiting 을 확인하세요.");
   }
 
-  if (options.scraperBackend === "firecrawl" || options.scraperBackend === "crawl4ai") {
+  if (options.scraperBackend === "crawl4ai") {
     throw new Error(
       `${options.scraperBackend} 백엔드는 API 키 설정 후 사용 가능합니다. /dashboard/waiting 참고.`,
     );
@@ -147,12 +153,21 @@ export async function runCloneForProject(
   }
 
   const options = mergeOptions(mode, rawOptions);
-  const waitingHint = await ensureWaitingForMode(mode, options);
+  const backend = resolveScraperBackend(options);
+  const waitingHint = await ensureWaitingForMode(mode, { ...options, scraperBackend: backend });
 
-  if (modeNeedsWorker(mode) && !isWorkerConfigured()) {
-    throw new Error(
-      `${mode} 모드는 Clone Worker가 필요합니다. docker compose up clone-worker 후 CLONE_WORKER_URL을 설정하거나 /dashboard/waiting을 확인하세요.`,
-    );
+  if (modeNeedsWorker(mode)) {
+    if (backend === "firecrawl") {
+      if (!isFirecrawlConfigured()) {
+        throw new Error(
+          "FIRECRAWL_API_KEY가 필요합니다. Vercel 환경 변수에 설정하거나 /dashboard/waiting 을 확인하세요.",
+        );
+      }
+    } else if (!isWorkerConfigured()) {
+      throw new Error(
+        `${mode} 모드는 Clone Worker가 필요합니다. CLONE_WORKER_URL을 설정하거나 고급 옵션에서 Firecrawl을 선택하세요.`,
+      );
+    }
   }
 
   const runId = newId();
@@ -244,9 +259,14 @@ export async function runCloneForProject(
       const staticResult = await runStaticClone(targetUrl, runId);
       result = staticResult.result;
     } else if (modeNeedsWorker(mode)) {
-      const workerResult = await runWorkerClone(targetUrl, mode, options, runId);
-      result = workerResult.result;
-      workerJobId = workerResult.workerJobId;
+      if (backend === "firecrawl") {
+        const fc = await runFirecrawlClone(targetUrl, mode, options, runId);
+        result = fc.result;
+      } else {
+        const workerResult = await runWorkerClone(targetUrl, mode, options, runId);
+        result = workerResult.result;
+        workerJobId = workerResult.workerJobId;
+      }
     }
 
     if (!result) {

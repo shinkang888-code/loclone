@@ -26,7 +26,7 @@ const WAITING_DEFS: Array<{
     id: "firecrawl-api",
     category: "credentials",
     title: "FireCrawl API 키 (선택)",
-    description: "scraperBackend=firecrawl 사용 시 FIRECRAWL_API_KEY가 필요합니다.",
+    description: "scraperBackend=firecrawl 사용 시 FIRECRAWL_API_KEY가 필요합니다. SPA(Next.js) 사이트에 권장.",
     envKeys: ["FIRECRAWL_API_KEY"],
     when: () => !process.env.FIRECRAWL_API_KEY?.trim(),
   },
@@ -58,13 +58,16 @@ export async function ensureWaitingForMode(
   }
 
   if (modeNeedsWorker(mode)) {
-    if (!process.env.CLONE_WORKER_URL?.trim()) {
+    const backend =
+      options?.scraperBackend ?? (process.env.FIRECRAWL_API_KEY?.trim() ? "firecrawl" : "local");
+    if (backend === "firecrawl") {
+      if (!process.env.FIRECRAWL_API_KEY?.trim()) {
+        await pushWaiting(WAITING_DEFS.find((d) => d.id === "firecrawl-api")!);
+        items.push("firecrawl");
+      }
+    } else if (!process.env.CLONE_WORKER_URL?.trim()) {
       await pushWaiting(WAITING_DEFS.find((d) => d.id === "clone-worker-url")!);
       items.push("clone_worker");
-    }
-    if (options?.scraperBackend === "firecrawl") {
-      await pushWaiting(WAITING_DEFS.find((d) => d.id === "firecrawl-api")!);
-      items.push("firecrawl");
     }
     if (options?.scraperBackend === "crawl4ai") {
       await pushWaiting(WAITING_DEFS.find((d) => d.id === "crawl4ai-url")!);

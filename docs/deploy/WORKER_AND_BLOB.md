@@ -58,5 +58,5 @@ curl.exe https://YOUR-WORKER.onrender.com/health
 | 모드 | 필요 조건 |
 |------|-----------|
 | 빠른 추출 | Vercel만 (Neon + `/tmp`) |
-| JS 렌더 / 미러 | `CLONE_WORKER_URL` + Render Worker |
+| JS 렌더 / 미러 | `CLONE_WORKER_URL` + Render Worker **또는** `FIRECRAWL_API_KEY` (Firecrawl) |
 | 영구 에셋 | `BLOB_READ_WRITE_TOKEN` (Vercel + Worker) |
