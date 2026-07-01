@@ -4,7 +4,7 @@ services:
   - type: web
     name: loclone-clone-worker
     runtime: docker
-    plan: starter
+    plan: standard
     region: singapore
     branch: master
     repo: https://github.com/shinkang888-code/loclone
@@ -21,7 +21,7 @@ services:
       - key: WORKER_BROWSER_PER_JOB
         value: "true"
       - key: NODE_OPTIONS
-        value: "--max-old-space-size=320"
+        value: "--max-old-space-size=512"
       - key: WORKER_HEADLESS
         value: "true"
       - key: BLOB_READ_WRITE_TOKEN
