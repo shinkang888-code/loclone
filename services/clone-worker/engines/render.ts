@@ -26,16 +26,20 @@ async function readPageHtml(page: Page): Promise<string> {
   }
 }
 
+/**
+ * Next.js SPA — domcontentloaded는 폰트·청크 대기로 OOM/타임아웃 유발.
+ * commit 후 hydration 대기가 Render 512MB에서 안정적.
+ */
 export async function renderSinglePage(
   page: Page,
   url: string,
   _options?: CloneOptions,
 ): Promise<CloneResult> {
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
-  await delay(4_000);
+  await page.goto(url, { waitUntil: "commit", timeout: 180_000 });
+  await delay(30_000);
   await page
     .waitForFunction(() => (document.body?.innerText?.trim().length ?? 0) > 10, {
-      timeout: 20_000,
+      timeout: 30_000,
     })
     .catch(() => {});
 

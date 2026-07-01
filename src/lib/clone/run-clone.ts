@@ -74,7 +74,7 @@ async function runWorkerClone(
   });
 
   await appendRunLog(locloneRunId, `worker: jobId=${created.jobId}`);
-  const finished = await waitForWorkerJob(created.jobId);
+  const finished = await waitForWorkerJob(created.jobId, { timeoutMs: 360_000 });
 
   if (finished.status === "failed" || !finished.result) {
     throw new Error(finished.error ?? "Worker 클론 실패");
