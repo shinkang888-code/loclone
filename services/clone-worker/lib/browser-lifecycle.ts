@@ -8,6 +8,10 @@ const LAUNCH_ARGS = [
   "--disable-software-rasterizer",
   "--disable-extensions",
   "--no-first-run",
+  "--disable-background-networking",
+  "--disable-default-apps",
+  "--disable-sync",
+  "--mute-audio",
 ];
 
 let browser: Browser | null = null;
