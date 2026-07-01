@@ -12,6 +12,7 @@ const LAUNCH_ARGS = [
   "--disable-default-apps",
   "--disable-sync",
   "--blink-settings=imagesEnabled=false",
+  "--single-process",
   "--mute-audio",
 ];
 

@@ -1,5 +1,5 @@
 import type { Page } from "playwright";
-import { setupClonePage } from "../lib/page-setup.js";
+import { setupClonePage, delay } from "../lib/page-setup.js";
 import { savePageOutput, makeRunId } from "../lib/output.js";
 import type { CloneOptions, CloneResult } from "../types.js";
 
@@ -13,10 +13,6 @@ function parseMeta(html: string) {
     description: html.match(DESC_RE)?.[1]?.trim() ?? null,
     ogImage: html.match(OG_RE)?.[1]?.trim() ?? null,
   };
-}
-
-function delay(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function readPageHtml(page: Page): Promise<string> {
