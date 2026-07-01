@@ -35,7 +35,12 @@ async function openPage(): Promise<{
     ignoreHTTPSErrors: true,
   });
   const page = await context.newPage();
-  await setupClonePage(page);
+  if (process.env.WORKER_MINIMAL_RENDER !== "1") {
+    await setupClonePage(page);
+  } else {
+    page.setDefaultNavigationTimeout(120_000);
+    page.setDefaultTimeout(60_000);
+  }
   return { page, context, perJob, browser };
 }
 

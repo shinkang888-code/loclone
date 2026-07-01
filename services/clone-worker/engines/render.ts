@@ -1,5 +1,4 @@
 import type { Page } from "playwright";
-import { waitForRenderablePage } from "../lib/page-setup.js";
 import { savePageOutput, makeRunId } from "../lib/output.js";
 import type { CloneOptions, CloneResult } from "../types.js";
 
@@ -15,19 +14,32 @@ function parseMeta(html: string) {
   };
 }
 
-/**
- * SPA 렌더 — navigation 중 에셋 body() 캡처는 RAM 부족(OOM)을 유발하므로
- * 렌더된 HTML만 저장하고 에셋 URL은 원본 절대경로를 유지합니다.
- */
+function delay(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function readPageHtml(page: Page): Promise<string> {
+  try {
+    return await page.content();
+  } catch {
+    return page.evaluate(() => document.documentElement.outerHTML);
+  }
+}
+
 export async function renderSinglePage(
   page: Page,
   url: string,
   _options?: CloneOptions,
 ): Promise<CloneResult> {
-  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 90_000 });
-  await waitForRenderablePage(page);
+  await page.goto(url, { waitUntil: "domcontentloaded", timeout: 120_000 });
+  await delay(4_000);
+  await page
+    .waitForFunction(() => (document.body?.innerText?.trim().length ?? 0) > 10, {
+      timeout: 20_000,
+    })
+    .catch(() => {});
 
-  const html = await page.content();
+  const html = await readPageHtml(page);
   const finalUrl = page.url();
   const meta = parseMeta(html);
 
